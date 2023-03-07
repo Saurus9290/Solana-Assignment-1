@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>SOLANA ASSIGNMENT</title>
+</head>
+<body>
+    <h1>Transaction Details</h1>
+    <button type="button" onclick="connectWallet()">Connect Wallet</button>
+    <div id="phantom-output"></div>
+
+    <br><br><br><hr>
+    <button type="button" onclick="createAccount()">Create Account</button>
+    <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.js"></script>
+
+    <div id="output"></div>
+    <br>
+    <button type="button" onclick="airdrop()">Airdrop SOME SOL</button>
+    <br><br><br>
+    <button type="button" onclick="transferFunds()">Transfer Funds</button>
+    <script>
+        const wallet = new solanaWeb3.Keypair();
+
+        const publicKey = new solanaWeb3.PublicKey(wallet._keypair.publicKey);
+        const secretKey = wallet._keypair.secretKey;
+
+        async function createAccount() {
+          let html = `<p> Account Created: ${publicKey}</p>`;
+          const connection = new solanaWeb3.Connection("https://api.devnet.solana.com",'confirmed')
+          const walletBalance = await connection.getBalance(publicKey)
+          html += `<p>Balance is ${walletBalance} </p>`
+          document.getElementById("output").innerHTML = html;
+        }
+
+        async function airdrop() {
+       
+        const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('devnet'),'confirmed')
+        const fromAirDropSignature = await connection.requestAirdrop(publicKey, 2 * 1e9);
+        await connection.confirmTransaction(fromAirDropSignature)
+        let walletBalance = await connection.getBalance(publicKey)
+
+        let html = `<p>Now the Balance is ${walletBalance } LAMPORTS <br></p>`
+        document.getElementById("output").innerHTML = html;
+
+        }
+
+        let walletAddress;
+        async function connectWallet(){
+        try {
+            const resp = await window.solana.connect();
+             walletAddress =  await resp.publicKey.toString(); 
+            let html = `<p>Connected Phantom Wallet ${resp.publicKey.toString()} </p>`;
+            document.getElementById("phantom-output").innerHTML = html;
+            console.log("ATTENTION", walletAddress);
+
+            //return walletAddress;
+        } 
+        catch(err){
+            console.log("Install Phantom Wallet");
+            alert("you don't have phantom wallet, redirecting to phantom download page");
+            location.replace('https://phantom.app/download');
+           // window.open('https://phantom.app/download', "_blank");
+        }
+    };
+
+        async function transferFunds(){
+            let transaction = new solanaWeb3.Transaction();
+            transaction.add(
+                solanaWeb3.SystemProgram.transfer({
+                        fromPubkey: publicKey,
+                        toPubkey: walletAddress,
+                        lamports: 1e9,
+                    }),
+            );
+
+            // const connection = new solanaWeb3.Connection("https://api.devnet.solana.com",'confirmed')
+            // const sig =  await sendAndConfirmTransaction(connection, transaction, [wallet]);
+            // console.log("SENT");
+
+        }
+
+        
+    </script>
+</body>
+</html>
